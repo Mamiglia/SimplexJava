@@ -17,8 +17,8 @@ public class Simplex {
     protected Vector<Integer> indexofN;
     private SimpleMatrix cN;
     private SimpleMatrix cB;
-    private SimpleMatrix B;
-    private SimpleMatrix N;
+    protected SimpleMatrix B;
+    protected SimpleMatrix N;
     private SimpleMatrix gamma;
     private SimpleMatrix optimalSolution;
 
@@ -39,7 +39,7 @@ public class Simplex {
 
 
     public void initialize() {
-        Simplex aux = new Simplex(A, b, true);
+        Simplex aux = new AuxSimplex(A, b);
         aux.solve();
         if (aux.getOptimalValue() != 0) {
             optimalSolution = INEXISTENT_SOLUTION;
@@ -70,7 +70,6 @@ public class Simplex {
 
                 int h= indexOfMinimum(gamma); //index of N to be entered in B'
 
-
                 int k; //index of B to be exited from B'
                 SimpleMatrix BinvertedNcolumnh = B.invert().mult(N).extractVector(false, h);
                 SimpleMatrix Binvertedb = B.invert().mult(b);
@@ -93,10 +92,9 @@ public class Simplex {
                 int temp = indexofB.get(k);
                 indexofB.set(k, indexofN.get(h));
                 indexofN.set(h, temp);
+
                 j++;
-
             }
-
         }
         return optimalSolution;
     }
