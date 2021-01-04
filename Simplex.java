@@ -74,7 +74,7 @@ public class Simplex {
         if (aux.getOptimalValue() != 0) {
             optimalSolution = INEXISTENT_SOLUTION;
         }
-        
+
     }
 
     public SimpleMatrix solve() {
@@ -132,7 +132,7 @@ public class Simplex {
     }
 
     public SimpleMatrix getOptimalSolution() {
-        return optimalSolution;
+        return optimalSolution.copy();
     }
     public double getOptimalValue() {
         if (optimalSolution.equals(BOUNDLESS_SOLUTION)) return Double.NEGATIVE_INFINITY;
