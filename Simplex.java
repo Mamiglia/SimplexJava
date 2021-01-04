@@ -8,13 +8,13 @@ import org.ejml.simple.*;
 public class Simplex {
     public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.POSITIVE_INFINITY}});
     public final static SimpleMatrix INEXISTENT_SOLUTION = new SimpleMatrix();
-    private final SimpleMatrix c;
+    protected final SimpleMatrix c;
     private final SimpleMatrix A;
     private final SimpleMatrix b;
-    private final int m;
-    private final int n;
-    private Vector<Integer> indexofB;
-    private Vector<Integer> indexofN;
+    protected final int m;
+    protected final int n;
+    protected Vector<Integer> indexofB;
+    protected Vector<Integer> indexofN;
     private SimpleMatrix cN;
     private SimpleMatrix cB;
     private SimpleMatrix B;
@@ -22,51 +22,21 @@ public class Simplex {
     private SimpleMatrix gamma;
     private SimpleMatrix optimalSolution;
 
-    public Simplex(double[] c, double[][] A, double[] b) {
-        this.c = convertArrayToSimpleMatrix(c, false);
-        this.A = new SimpleMatrix(A);
-        this.b = convertArrayToSimpleMatrix(b, false);
+    public Simplex(SimpleMatrix c, SimpleMatrix A, SimpleMatrix b) {
+        this.c = c;
+        this.A = A;
+        this.b = b;
         n = this.A.numCols();
         m = this.A.numRows();
-
-        indexofB = new Vector<>();
-        indexofB.add(3);
-        indexofB.add(4);
-        indexofB.add(5);
-
-        indexofN = new Vector<>();
-        indexofN.add(0);
-        indexofN.add(1);
-        indexofN.add(2);
-
-        //temporary choice
-        System.out.println("min ");
-        System.out.println("Problem acquired, ready to Start");
+    }
+    public Simplex(double[] c, double[][] A, double[] b) {
+        this(
+                convertArrayToSimpleMatrix(c, false),
+                new SimpleMatrix(A),
+                convertArrayToSimpleMatrix(b, false)
+        );
     }
 
-    private Simplex(SimpleMatrix A, SimpleMatrix b, boolean auxiliary) {
-        m = A.numRows();
-        n = A.numCols() + m;
-
-        // It doesn't check if there are already some identity columns
-        this.A = A.concatColumns(SimpleMatrix.identity(m));
-        this.c = new SimpleMatrix(m, 1);
-        this.c.set(1);
-        this.b = b;
-
-        indexofB = new Vector<>();
-        indexofN = new Vector<>();
-        for (int i=0; i<m; i++) {
-            indexofB.add(n-m+i);
-        }
-        for (int i=0; i<n-m; i++) {
-            indexofN.add(i);
-        }
-
-
-
-
-    }
 
     public void initialize() {
         Simplex aux = new Simplex(A, b, true);
