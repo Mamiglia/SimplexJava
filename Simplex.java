@@ -1,6 +1,7 @@
 package com.company;
 
 import java.lang.*;
+import java.util.Arrays;
 import java.util.Vector;
 
 import org.ejml.simple.*;
@@ -9,14 +10,14 @@ public class Simplex {
     public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.POSITIVE_INFINITY}});
     public final static SimpleMatrix INEXISTENT_SOLUTION = new SimpleMatrix();
     protected final SimpleMatrix c;
-    private final SimpleMatrix A;
-    private final SimpleMatrix b;
+    protected final SimpleMatrix A;
+    protected final SimpleMatrix b;
     protected final int m;
     protected final int n;
     protected Vector<Integer> indexofB;
     protected Vector<Integer> indexofN;
-    private SimpleMatrix cN;
-    private SimpleMatrix cB;
+    protected SimpleMatrix cN;
+    protected SimpleMatrix cB;
     protected SimpleMatrix B;
     protected SimpleMatrix N;
     private SimpleMatrix gamma;
@@ -38,16 +39,26 @@ public class Simplex {
     }
 
 
-    public void initialize() {
-        Simplex aux = new AuxSimplex(A, b);
+    protected void initialize() {
+        System.out.println("Beginning Auxiliar problem");
+        AuxSimplex aux = new AuxSimplex(A, b);
         aux.solve();
         if (aux.getOptimalValue() != 0) {
             optimalSolution = INEXISTENT_SOLUTION;
         }
-
+        indexofB = aux.getIndexBase();
+        indexofN = new Vector<>();
+        for (int i=0; i<n; i++) {
+            if(!indexofB.contains(i)) indexofN.add(i);
+        }
+        System.out.println(
+                "Auxiliar problem solved, the Optimal solution exist\n"
+                + "Base Found: " + indexofB.toString()
+        );
     }
 
     public SimpleMatrix solve() {
+        initialize();
         int j=0;
         while (optimalSolution == null) {
             System.out.println("\n\nIteration " + j);
@@ -122,7 +133,7 @@ public class Simplex {
         }
         return xStar;
     }
-    private void updateParams() {
+    protected void updateParams() {
         generateBase();
 //        B.print();
 //        N.print();

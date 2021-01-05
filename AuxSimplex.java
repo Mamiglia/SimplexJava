@@ -11,10 +11,36 @@ class AuxSimplex extends Simplex {
     public AuxSimplex(SimpleMatrix A, SimpleMatrix b) {
         // It doesn't check if there are already some identity columns
         super(
-                cAux(A.numRows()),
+                cAux(A.numCols(), A.numRows()),
                 A.concatColumns(SimpleMatrix.identity(A.numRows())),
                 b);
+    }
 
+    public Vector<Integer> getIndexBase() {
+        int columnToBeExited = findAuxCol(indexofB);
+        while (columnToBeExited>=0) {
+            int i=0;
+            int columnToBeEntered = indexofN.get(i);
+            while (indexofAux.contains(columnToBeEntered)) {
+                columnToBeEntered = indexofN.get(i);
+                i++;
+            }
+
+            SimpleMatrix BinvertedN = B.invert().mult(N);
+            if ((new SimpleMatrix(m, n-m)).equals(BinvertedN.extractVector(false, columnToBeEntered))) {
+                indexofN.remove(columnToBeExited);
+            } else {
+                indexofB.set(indexofB.indexOf(columnToBeExited), columnToBeEntered);
+                indexofN.set(indexofB.indexOf(columnToBeEntered), columnToBeExited);
+            }
+
+            columnToBeExited = findAuxCol(indexofB);
+        }
+        return (Vector<Integer>) indexofB.clone();
+    }
+
+    @Override
+    protected void initialize() {
         indexofB = new Vector<>();
         indexofN = new Vector<>();
         for (int i=0; i<m; i++) {
@@ -24,37 +50,31 @@ class AuxSimplex extends Simplex {
         for (int i=0; i<n-m; i++) {
             indexofN.add(i);
         }
+        c.print();
+        A.print();
+        b.print();
+        System.out.println(indexofB.toString());
+        System.out.println(indexofN.toString());
+        System.out.println(indexofAux.toString());
+        System.out.println(n + " " + m);
+        updateParams();
 
-
+        B.print();
+        cB.print();
 
 
     }
-
-    private void getRidOfAuxColumns() {
-        int columnToBeExited = areThereAuxColumnsInB();
-        while (columnToBeExited>=0) {
-            int k = indexofAux.get(columnToBeExited);
-            SimpleMatrix BinvertedN = B.invert().mult(N);
-            if ()
-
-            columnToBeExited = areThereAuxColumnsInB();
-        }
-
-    }
-
-    private int areThereAuxColumnsInB() {
+    private int findAuxCol(Vector indexof) {
         for (int i=0; i<indexofAux.size(); i++) {
-            if (indexofB.contains(indexofAux.get(i))) return i;
+            if (indexof.contains(indexofAux.get(i))) return indexofAux.get(i);
         }
         return -1;
     }
-    static private SimpleMatrix cAux(int m) {
+    static private SimpleMatrix cAux(int n, int m) {
         // creates the auxiliary object function (1,1,1,1,1,...,1)
         SimpleMatrix cAux = new SimpleMatrix(m, 1);
         cAux.set(1);
-        return cAux;
+        return (new SimpleMatrix(n, 1)).concatRows(cAux);
 
     }
-
-
 }
