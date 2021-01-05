@@ -7,7 +7,7 @@ import org.ejml.simple.*;
 
 public class Simplex {
     public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.POSITIVE_INFINITY}});
-    public final static SimpleMatrix NONEXISTENT_SOLUTION = new SimpleMatrix();
+    public final static SimpleMatrix NONEXISTENT_SOLUTION = new SimpleMatrix(5,5);
     protected final SimpleMatrix c;
     protected SimpleMatrix A;
     protected SimpleMatrix b;
@@ -43,7 +43,9 @@ public class Simplex {
         AuxSimplex aux = new AuxSimplex(A, b);
         aux.solve();
         if (aux.getOptimalValue() != 0) {
+            System.out.println("Auxiliar optimal value is not 0\nThe Problem has no valid solutions");
             optimalSolution = NONEXISTENT_SOLUTION;
+            return;
         }
         indexofB = aux.getIndexBase();
         indexofN = new Vector<>();
