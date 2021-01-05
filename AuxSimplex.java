@@ -1,8 +1,6 @@
 package com.company;
 
 import org.ejml.simple.SimpleMatrix;
-
-import java.util.Arrays;
 import java.util.Vector;
 
 class AuxSimplex extends Simplex {
@@ -50,18 +48,7 @@ class AuxSimplex extends Simplex {
         for (int i=0; i<n-m; i++) {
             indexofN.add(i);
         }
-        c.print();
-        A.print();
-        b.print();
-        System.out.println(indexofB.toString());
-        System.out.println(indexofN.toString());
-        System.out.println(indexofAux.toString());
-        System.out.println(n + " " + m);
         updateParams();
-
-        B.print();
-        cB.print();
-
 
     }
     private int findAuxCol(Vector indexof) {

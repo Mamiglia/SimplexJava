@@ -1,7 +1,6 @@
 package com.company;
 
 import java.lang.*;
-import java.util.Arrays;
 import java.util.Vector;
 
 import org.ejml.simple.*;
@@ -16,8 +15,8 @@ public class Simplex {
     protected final int n;
     protected Vector<Integer> indexofB;
     protected Vector<Integer> indexofN;
-    protected SimpleMatrix cN;
-    protected SimpleMatrix cB;
+    private SimpleMatrix cN;
+    private SimpleMatrix cB;
     protected SimpleMatrix B;
     protected SimpleMatrix N;
     private SimpleMatrix gamma;
@@ -58,13 +57,13 @@ public class Simplex {
     }
 
     public SimpleMatrix solve() {
+        if (!checkAmmissibility()) return null;
         initialize();
         int j=0;
         while (optimalSolution == null) {
             System.out.println("\n\nIteration " + j);
             updateParams();
-            B.print();
-            gamma.print();
+
             System.out.println(indexofB);
             System.out.println(indexofN);
 
@@ -135,11 +134,9 @@ public class Simplex {
     }
     protected void updateParams() {
         generateBase();
-//        B.print();
-//        N.print();
-//        cB.print();
-//        cN.print();
+        B.print();
         generateGamma();
+        gamma.print();
     }
     private void generateGamma() {
         gamma = (cN.transpose().minus(cB.transpose().mult(B.invert().mult(N)))).transpose();
@@ -178,7 +175,20 @@ public class Simplex {
         }
         return false;
     }
+    private boolean checkAmmissibility() {
+        if (
+                A.numRows() == m &&
+                A.numCols() == n &&
+                b.numRows() == m &&
+                c.numRows() == n
+        ) {
+            return true;
+        } else {
+            System.out.println("Some sizes don't match, Dimension error");
+            return false;
+        }
 
+    }
     public static double[][] matrix2Array(SimpleMatrix matrix) {
         double[][] array = new double[matrix.numRows()][matrix.numCols()];
         for (int r = 0; r < matrix.numRows(); r++) {
