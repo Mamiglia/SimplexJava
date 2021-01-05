@@ -6,8 +6,8 @@ import java.util.Vector;
 import org.ejml.simple.*;
 
 public class Simplex {
-    public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.POSITIVE_INFINITY}});
-    public final static SimpleMatrix NONEXISTENT_SOLUTION = new SimpleMatrix(5,5);
+    public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.NEGATIVE_INFINITY}});
+    public final static SimpleMatrix NONEXISTENT_SOLUTION = new SimpleMatrix(0,0);
     protected final SimpleMatrix c;
     protected SimpleMatrix A;
     protected SimpleMatrix b;
@@ -136,8 +136,8 @@ public class Simplex {
     }
     public double getOptimalValue() {
         if (optimalSolution.equals(BOUNDLESS_SOLUTION)) return Double.NEGATIVE_INFINITY;
-        if (optimalSolution.equals(NONEXISTENT_SOLUTION)) return Double.POSITIVE_INFINITY;
-        return c.transpose().mult(optimalSolution).get(0,0);
+        else if (optimalSolution.equals(NONEXISTENT_SOLUTION)) return Double.POSITIVE_INFINITY;
+        else return c.transpose().mult(optimalSolution).get(0,0);
     }
 
     private SimpleMatrix generateSBA() {
@@ -224,15 +224,7 @@ public class Simplex {
         }
 
     }
-    public static double[][] matrix2Array(SimpleMatrix matrix) {
-        double[][] array = new double[matrix.numRows()][matrix.numCols()];
-        for (int r = 0; r < matrix.numRows(); r++) {
-            for (int c = 0; c < matrix.numCols(); c++) {
-                array[r][c] = matrix.get(r, c);
-            }
-        }
-        return array;
-    }
+
     public static int indexOfMinimum(SimpleMatrix v) {
         Vector<Double> c = new Vector<>();
         for (int i=0; i<v.numRows(); i++) {
@@ -243,8 +235,8 @@ public class Simplex {
     }
     public static double findMinimum(Vector<Double> v) {
         double min = Double.POSITIVE_INFINITY;
-        for (int i=0; i<v.size(); i++) {
-            min = Double.min(v.get(i), min);
+        for (Double aDouble : v) {
+            min = Double.min(aDouble, min);
         }
         return min;
     }
