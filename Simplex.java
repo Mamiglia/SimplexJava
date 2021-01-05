@@ -7,11 +7,11 @@ import org.ejml.simple.*;
 
 public class Simplex {
     public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.POSITIVE_INFINITY}});
-    public final static SimpleMatrix INEXISTENT_SOLUTION = new SimpleMatrix();
+    public final static SimpleMatrix NONEXISTENT_SOLUTION = new SimpleMatrix();
     protected final SimpleMatrix c;
-    protected final SimpleMatrix A;
-    protected final SimpleMatrix b;
-    protected final int m;
+    protected SimpleMatrix A;
+    protected SimpleMatrix b;
+    protected int m;
     protected final int n;
     protected Vector<Integer> indexofB;
     protected Vector<Integer> indexofN;
@@ -43,17 +43,38 @@ public class Simplex {
         AuxSimplex aux = new AuxSimplex(A, b);
         aux.solve();
         if (aux.getOptimalValue() != 0) {
-            optimalSolution = INEXISTENT_SOLUTION;
+            optimalSolution = NONEXISTENT_SOLUTION;
         }
         indexofB = aux.getIndexBase();
         indexofN = new Vector<>();
         for (int i=0; i<n; i++) {
             if(!indexofB.contains(i)) indexofN.add(i);
         }
+
+        removeRedundant(aux.getIndexofRedundant());
+
         System.out.println(
                 "Auxiliar problem solved, the Optimal solution exist\n"
                 + "Base Found: " + indexofB.toString()
         );
+    }
+
+    private void removeRedundant(Vector<Integer> indexofRedundant) {
+        SimpleMatrix AReducted = null, bReducted=null;
+        for (int i=0; i<A.numRows(); i++) {
+            if (!indexofRedundant.contains(i)) {
+                if (AReducted == null || b==null) {
+                    AReducted = A.extractVector(true, i);
+                    bReducted = b.extractVector(true, i);
+                } else {
+                    AReducted = AReducted.concatRows(A.extractVector(true, i));
+                    bReducted = bReducted.concatRows(b.extractVector(true, i));
+                }
+            }
+        }
+        m = m - indexofRedundant.size();
+        A = AReducted;
+        b = bReducted;
     }
 
     public SimpleMatrix solve() {
@@ -114,7 +135,7 @@ public class Simplex {
     }
     public double getOptimalValue() {
         if (optimalSolution.equals(BOUNDLESS_SOLUTION)) return Double.NEGATIVE_INFINITY;
-        if (optimalSolution.equals(INEXISTENT_SOLUTION)) return Double.POSITIVE_INFINITY;
+        if (optimalSolution.equals(NONEXISTENT_SOLUTION)) return Double.POSITIVE_INFINITY;
         return c.transpose().mult(optimalSolution).get(0,0);
     }
 
@@ -141,7 +162,7 @@ public class Simplex {
     private void generateGamma() {
         gamma = (cN.transpose().minus(cB.transpose().mult(B.invert().mult(N)))).transpose();
     }
-    private void generateBase() {
+    protected void generateBase() {
         B = null;
         N = null;
         cB = new SimpleMatrix(m, 1);
