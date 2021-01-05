@@ -24,8 +24,6 @@ class AuxSimplex extends Simplex {
         int columnToBeExited = findAuxCol(indexofB);
         while (columnToBeExited>=0) {
             System.out.println("Column to be exited: " + columnToBeExited);
-            System.out.println(indexofB.toString());
-            System.out.println(indexofN.toString());
 
             int i=0;
             int columnToBeEntered = indexofN.get(i);
@@ -39,19 +37,13 @@ class AuxSimplex extends Simplex {
             indexofN.set(indexofN.indexOf(columnToBeEntered), columnToBeExited);
             generateBase();
             if (B.determinant() == 0) {
-                B.print();
-                N.print();
+                System.out.println("Redundant row found: "+ columnToBeEntered);
                 indexofRedundant.add(columnToBeEntered);
                 indexofB.remove(columnToBeEntered);
                 B.reshape(m-1,m-1);
                 N.reshape(m-1, N.numCols());
-                B.print();
-                N.print();
-
             }
             SimpleMatrix BinvertedN = B.invert().mult(N);
-            BinvertedN.print();
-
 
             columnToBeExited = findAuxCol(indexofB);
         }

@@ -84,9 +84,8 @@ public class Simplex {
         while (optimalSolution == null) {
             System.out.println("\n\nIteration " + j);
             updateParams();
+            printStatus();
 
-            System.out.println(indexofB);
-            System.out.println(indexofN);
 
             if (optimalityCriterion()) {
                 System.out.println("Optimality Criterion is verified");
@@ -155,9 +154,7 @@ public class Simplex {
     }
     protected void updateParams() {
         generateBase();
-        B.print();
         generateGamma();
-        gamma.print();
     }
     private void generateGamma() {
         gamma = (cN.transpose().minus(cB.transpose().mult(B.invert().mult(N)))).transpose();
@@ -177,6 +174,18 @@ public class Simplex {
             else N = N.concatColumns(A.extractVector(false,indexofN.get(j)));
             cN.set(j,0,c.get(indexofN.get(j),0));
         }
+    }
+    protected void printStatus() {
+        System.out.println(
+                "Current Base:\n"
+                + B.toString()
+                + "Current Gamma:\n"
+                + gamma.toString()
+                + "Indexes in Base: "
+                + indexofB.toString()
+                + "\nIndexes not in Base: "
+                + indexofN.toString()
+        );
     }
     private boolean optimalityCriterion() {
         for (int i=0; i<gamma.numRows(); i++) {
@@ -205,6 +214,9 @@ public class Simplex {
         ) {
             return true;
         } else {
+            A.print();
+            b.print();
+            c.print();
             System.out.println("Some sizes don't match, Dimension error");
             return false;
         }
