@@ -1,7 +1,6 @@
 import org.ejml.simple.SimpleMatrix; // must use v0.33 since recent versions don't have any documentation
 
 import java.util.ArrayList;
-import java.util.List;
 
 class AuxSimplex extends Simplex {
     // Creates the auxiliar problem, to find out:
@@ -72,7 +71,7 @@ class AuxSimplex extends Simplex {
     public ArrayList<Integer> getIndexofRedundant() {
         return indexofRedundant;
     }
-    private int findAuxCol(List<Integer> indexof) {
+    private int findAuxCol(ArrayList<Integer> indexof) {
         for (Integer i : indexofAux) {
             if (indexof.contains(i)) return i;
         }
