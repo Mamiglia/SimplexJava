@@ -6,6 +6,10 @@ import org.ejml.simple.SimpleMatrix; // must use v0.33 since recent versions don
 
 
 public class Simplex {
+    // Solves minimization problems in the standard form:
+    // min c^T x
+    //     Ax=b
+    //     x>=0
     public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.NEGATIVE_INFINITY}});
     public final static SimpleMatrix NONEXISTENT_SOLUTION = new SimpleMatrix(0,0);
     protected final SimpleMatrix objectiveFunction;
