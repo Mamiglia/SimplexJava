@@ -4,6 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 class AuxSimplex extends Simplex {
+    // Creates the auxiliar problem, to find out:
+    // 1- whether the problem is non-void
+    // 2- find a valid base
+    // the auxiliar problem has this form:
+    // min (1,1,...,1,1) a
+    //     Ax + Ia = b
+    //     x>=0
+    //     a>=0
+    // a are named "Auxiliar Variables"
     private ArrayList<Integer> indexofAux;
     private ArrayList<Integer> indexofRedundant;
 
@@ -13,7 +22,7 @@ class AuxSimplex extends Simplex {
                 cAux(A.numCols(), A.numRows()),
                 A.concatColumns(SimpleMatrix.identity(A.numRows())),
                 b);
-        indexofRedundant = new ArrayList<Integer>();
+        indexofRedundant = new ArrayList<>();
     }
 
     public ArrayList<Integer> getIndexBase() {
@@ -37,10 +46,9 @@ class AuxSimplex extends Simplex {
                 System.out.println("Redundant row found: "+ columnToBeEntered);
                 indexofRedundant.add(columnToBeEntered);
                 indexofB.remove(columnToBeEntered);
-                base.reshape(m-1,m-1);
-                nonBase.reshape(m-1, nonBase.numCols());
+                base.reshape(numOfConstraints()-1,numOfConstraints()-1);
+                nonBase.reshape(numOfConstraints()-1, nonBase.numCols());
             }
-            SimpleMatrix BinvertedN = base.invert().mult(nonBase);
 
             columnToBeExited = findAuxCol(indexofB);
         }
@@ -51,11 +59,11 @@ class AuxSimplex extends Simplex {
     protected void initialize() {
         indexofB = new ArrayList<>();
         indexofN = new ArrayList<>();
-        for (int i=0; i<m; i++) {
-            indexofB.add(n-m+i);
+        for (int i=0; i<numOfConstraints(); i++) {
+            indexofB.add(numOfVars()-numOfConstraints()+i);
         }
         indexofAux = (ArrayList<Integer>) indexofB.clone();
-        for (int i=0; i<n-m; i++) {
+        for (int i=0; i<numOfVars()-numOfConstraints(); i++) {
             indexofN.add(i);
         }
         updateParams();
@@ -65,8 +73,8 @@ class AuxSimplex extends Simplex {
         return indexofRedundant;
     }
     private int findAuxCol(List<Integer> indexof) {
-        for (int i=0; i<indexofAux.size(); i++) {
-            if (indexof.contains(indexofAux.get(i))) return indexofAux.get(i);
+        for (Integer i : indexofAux) {
+            if (indexof.contains(i)) return i;
         }
         return -1;
     }
