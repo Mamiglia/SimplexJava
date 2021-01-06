@@ -8,39 +8,35 @@ import org.ejml.simple.SimpleMatrix; // must use v0.33 since recent versions don
 public class Simplex {
     public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.NEGATIVE_INFINITY}});
     public final static SimpleMatrix NONEXISTENT_SOLUTION = new SimpleMatrix(0,0);
-    protected final SimpleMatrix c;
-    protected SimpleMatrix A;
-    protected SimpleMatrix b;
-    protected int m;
-    protected final int n;
+    protected final SimpleMatrix objectiveFunction;
+    protected SimpleMatrix constraintsMatrix;
+    protected SimpleMatrix constraintsVector;
     protected ArrayList<Integer> indexofB;
     protected ArrayList<Integer> indexofN;
     private SimpleMatrix cN;
     private SimpleMatrix cB;
-    protected SimpleMatrix B;
-    protected SimpleMatrix N;
+    protected SimpleMatrix base;
+    protected SimpleMatrix nonBase;
     private SimpleMatrix gamma;
     private SimpleMatrix optimalSolution;
 
-    public Simplex(SimpleMatrix c, SimpleMatrix A, SimpleMatrix b) {
-        this.c = c;
-        this.A = A;
-        this.b = b;
-        n = this.A.numCols();
-        m = this.A.numRows();
+    public Simplex(SimpleMatrix objectiveFunction, SimpleMatrix constraintsMatrix, SimpleMatrix constraintsVector) {
+        this.objectiveFunction = objectiveFunction;
+        this.constraintsMatrix = constraintsMatrix;
+        this.constraintsVector = constraintsVector;
     }
-    public Simplex(double[] c, double[][] A, double[] b) {
+    public Simplex(double[] objectiveFunction, double[][] constraintsMatrix, double[] constraintsVector) {
         this(
-                convertArrayToSimpleMatrix(c, false),
-                new SimpleMatrix(A),
-                convertArrayToSimpleMatrix(b, false)
+                convertArrayToSimpleMatrix(objectiveFunction, false),
+                new SimpleMatrix(constraintsMatrix),
+                convertArrayToSimpleMatrix(constraintsVector, false)
         );
     }
 
 
     protected void initialize() {
         System.out.println("Beginning Auxiliar problem");
-        AuxSimplex aux = new AuxSimplex(A, b);
+        AuxSimplex aux = new AuxSimplex(constraintsMatrix, constraintsVector);
         aux.solve();
         if (aux.getOptimalValue() != 0) {
             System.out.println("Auxiliar optimal value is not 0\nThe Problem has no valid solutions");
@@ -49,7 +45,7 @@ public class Simplex {
         }
         indexofB = aux.getIndexBase();
         indexofN = new ArrayList<>();
-        for (int i=0; i<n; i++) {
+        for (int i=0; i<numOfVars(); i++) {
             if(!indexofB.contains(i)) indexofN.add(i);
         }
 
@@ -63,20 +59,19 @@ public class Simplex {
 
     private void removeRedundant(ArrayList<Integer> indexofRedundant) {
         SimpleMatrix AReducted = null, bReducted=null;
-        for (int i=0; i<A.numRows(); i++) {
+        for (int i=0; i<constraintsMatrix.numRows(); i++) {
             if (!indexofRedundant.contains(i)) {
-                if (AReducted == null || b==null) {
-                    AReducted = A.extractVector(true, i);
-                    bReducted = b.extractVector(true, i);
+                if (AReducted == null || constraintsVector ==null) {
+                    AReducted = constraintsMatrix.extractVector(true, i);
+                    bReducted = constraintsVector.extractVector(true, i);
                 } else {
-                    AReducted = AReducted.concatRows(A.extractVector(true, i));
-                    bReducted = bReducted.concatRows(b.extractVector(true, i));
+                    AReducted = AReducted.concatRows(constraintsMatrix.extractVector(true, i));
+                    bReducted = bReducted.concatRows(constraintsVector.extractVector(true, i));
                 }
             }
         }
-        m = m - indexofRedundant.size();
-        A = AReducted;
-        b = bReducted;
+        constraintsMatrix = AReducted;
+        constraintsVector = bReducted;
     }
 
     public SimpleMatrix solve() {
@@ -103,8 +98,8 @@ public class Simplex {
                 int h= indexOfMinimum(gamma); //index of N to be entered in B'
 
                 int k; //index of B to be exited from B'
-                SimpleMatrix BinvertedNcolumnh = B.invert().mult(N).extractVector(false, h);
-                SimpleMatrix Binvertedb = B.invert().mult(b);
+                SimpleMatrix BinvertedNcolumnh = base.invert().mult(nonBase).extractVector(false, h);
+                SimpleMatrix Binvertedb = base.invert().mult(constraintsVector);
                 Vector<Double> roArray = new Vector<>();
 
                 //populate roArray
@@ -137,11 +132,17 @@ public class Simplex {
     public double getOptimalValue() {
         if (optimalSolution.equals(BOUNDLESS_SOLUTION)) return Double.NEGATIVE_INFINITY;
         else if (optimalSolution.equals(NONEXISTENT_SOLUTION)) return Double.POSITIVE_INFINITY;
-        else return c.transpose().mult(optimalSolution).get(0,0);
+        else return objectiveFunction.transpose().mult(optimalSolution).get(0,0);
+    }
+    public int numOfConstraints() {
+        return constraintsMatrix.numRows();
+    }
+    public int numOfVars() {
+        return constraintsMatrix.numCols();
     }
 
     private SimpleMatrix generateSBA() {
-        SimpleMatrix xB = B.invert().mult(b);
+        SimpleMatrix xB = base.invert().mult(constraintsVector);
         SimpleMatrix xN = new SimpleMatrix(indexofN.size(), 1);
         SimpleMatrix xUnordered = xB.concatRows(xN);
         SimpleMatrix xStar = new SimpleMatrix(xUnordered.numRows(), 1);
@@ -159,28 +160,28 @@ public class Simplex {
         generateGamma();
     }
     private void generateGamma() {
-        gamma = (cN.transpose().minus(cB.transpose().mult(B.invert().mult(N)))).transpose();
+        gamma = (cN.transpose().minus(cB.transpose().mult(base.invert().mult(nonBase)))).transpose();
     }
     protected void generateBase() {
-        B = null;
-        N = null;
-        cB = new SimpleMatrix(m, 1);
-        cN = new SimpleMatrix(n-m,1);
+        base = null;
+        nonBase = null;
+        cB = new SimpleMatrix(numOfConstraints(), 1);
+        cN = new SimpleMatrix(numOfVars()-numOfConstraints(),1);
         for (int i=0; i<indexofB.size();i++) {
-            if (B == null) B = A.extractVector(false,indexofB.get(i));
-            else B = B.concatColumns(A.extractVector(false,indexofB.get(i)));
-            cB.set(i,0,c.get(indexofB.get(i),0));
+            if (base == null) base = constraintsMatrix.extractVector(false,indexofB.get(i));
+            else base = base.concatColumns(constraintsMatrix.extractVector(false,indexofB.get(i)));
+            cB.set(i,0,objectiveFunction.get(indexofB.get(i),0));
         }
         for (int j=0; j<indexofN.size();j++) {
-            if (N == null) N = A.extractVector(false,indexofN.get(j));
-            else N = N.concatColumns(A.extractVector(false,indexofN.get(j)));
-            cN.set(j,0,c.get(indexofN.get(j),0));
+            if (nonBase == null) nonBase = constraintsMatrix.extractVector(false,indexofN.get(j));
+            else nonBase = nonBase.concatColumns(constraintsMatrix.extractVector(false,indexofN.get(j)));
+            cN.set(j,0,objectiveFunction.get(indexofN.get(j),0));
         }
     }
     protected void printStatus() {
         System.out.println(
                 "Current Base:\n"
-                + B.toString()
+                + base.toString()
                 + "Current Gamma:\n"
                 + gamma.toString()
                 + "Indexes in Base: "
@@ -196,7 +197,7 @@ public class Simplex {
         return true;
     }
     private boolean unlimitednessCriterion() {
-        SimpleMatrix BinvertedN = B.invert().mult(N);
+        SimpleMatrix BinvertedN = base.invert().mult(nonBase);
         for (int i=0; i<gamma.numRows(); i++) {
             if (
                     gamma.get(i,0) < 0
@@ -209,16 +210,14 @@ public class Simplex {
     }
     private boolean checkAmmissibility() {
         if (
-                A.numRows() == m &&
-                A.numCols() == n &&
-                b.numRows() == m &&
-                c.numRows() == n
+                constraintsVector.numRows() == numOfConstraints() &&
+                objectiveFunction.numRows() == numOfVars()
         ) {
             return true;
         } else {
-            A.print();
-            b.print();
-            c.print();
+            constraintsMatrix.print();
+            constraintsVector.print();
+            objectiveFunction.print();
             System.out.println("Some sizes don't match, Dimension error");
             return false;
         }

@@ -1,4 +1,4 @@
-import org.ejml.simple.SimpleMatrix; // must use v0.33 because recent versions don't have any documnetation
+import org.ejml.simple.SimpleMatrix; // must use v0.33 since recent versions don't have any documentation
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,14 +33,14 @@ class AuxSimplex extends Simplex {
             indexofB.set(indexofB.indexOf(columnToBeExited), columnToBeEntered);
             indexofN.set(indexofN.indexOf(columnToBeEntered), columnToBeExited);
             generateBase();
-            if (B.determinant() == 0) {
+            if (base.determinant() == 0) {
                 System.out.println("Redundant row found: "+ columnToBeEntered);
                 indexofRedundant.add(columnToBeEntered);
                 indexofB.remove(columnToBeEntered);
-                B.reshape(m-1,m-1);
-                N.reshape(m-1, N.numCols());
+                base.reshape(m-1,m-1);
+                nonBase.reshape(m-1, nonBase.numCols());
             }
-            SimpleMatrix BinvertedN = B.invert().mult(N);
+            SimpleMatrix BinvertedN = base.invert().mult(nonBase);
 
             columnToBeExited = findAuxCol(indexofB);
         }
