@@ -1,14 +1,11 @@
-package com.company;
+import org.ejml.simple.SimpleMatrix; // must use v0.33 because recent versions don't have any documnetation
 
-import org.ejml.simple.SimpleMatrix;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 class AuxSimplex extends Simplex {
-    private Vector<Integer> indexofAux;
-
-
-
-    private Vector<Integer> indexofRedundant;
+    private ArrayList<Integer> indexofAux;
+    private ArrayList<Integer> indexofRedundant;
 
     public AuxSimplex(SimpleMatrix A, SimpleMatrix b) {
         // It doesn't check if there are already some identity columns
@@ -16,10 +13,10 @@ class AuxSimplex extends Simplex {
                 cAux(A.numCols(), A.numRows()),
                 A.concatColumns(SimpleMatrix.identity(A.numRows())),
                 b);
-        indexofRedundant = new Vector<>();
+        indexofRedundant = new ArrayList<Integer>();
     }
 
-    public Vector<Integer> getIndexBase() {
+    public ArrayList<Integer> getIndexBase() {
         System.out.println(indexofAux.toString());
         int columnToBeExited = findAuxCol(indexofB);
         while (columnToBeExited>=0) {
@@ -47,27 +44,27 @@ class AuxSimplex extends Simplex {
 
             columnToBeExited = findAuxCol(indexofB);
         }
-        return (Vector<Integer>) indexofB.clone();
+        return (ArrayList<Integer>)  indexofB.clone();
     }
 
     @Override
     protected void initialize() {
-        indexofB = new Vector<>();
-        indexofN = new Vector<>();
+        indexofB = new ArrayList<>();
+        indexofN = new ArrayList<>();
         for (int i=0; i<m; i++) {
             indexofB.add(n-m+i);
         }
-        indexofAux = (Vector<Integer>) indexofB.clone();
+        indexofAux = (ArrayList<Integer>) indexofB.clone();
         for (int i=0; i<n-m; i++) {
             indexofN.add(i);
         }
         updateParams();
 
     }
-    public Vector<Integer> getIndexofRedundant() {
+    public ArrayList<Integer> getIndexofRedundant() {
         return indexofRedundant;
     }
-    private int findAuxCol(Vector indexof) {
+    private int findAuxCol(List<Integer> indexof) {
         for (int i=0; i<indexofAux.size(); i++) {
             if (indexof.contains(indexofAux.get(i))) return indexofAux.get(i);
         }

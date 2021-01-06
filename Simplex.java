@@ -1,9 +1,9 @@
-package com.company;
-
 import java.lang.*;
+import java.util.ArrayList;
 import java.util.Vector;
 
-import org.ejml.simple.*;
+import org.ejml.simple.SimpleMatrix; // must use v0.33 since recent versions don't have any documentation (or I couldn't find it)
+
 
 public class Simplex {
     public final static SimpleMatrix BOUNDLESS_SOLUTION = new SimpleMatrix(new double[][] {{Double.NEGATIVE_INFINITY}});
@@ -13,8 +13,8 @@ public class Simplex {
     protected SimpleMatrix b;
     protected int m;
     protected final int n;
-    protected Vector<Integer> indexofB;
-    protected Vector<Integer> indexofN;
+    protected ArrayList<Integer> indexofB;
+    protected ArrayList<Integer> indexofN;
     private SimpleMatrix cN;
     private SimpleMatrix cB;
     protected SimpleMatrix B;
@@ -48,7 +48,7 @@ public class Simplex {
             return;
         }
         indexofB = aux.getIndexBase();
-        indexofN = new Vector<>();
+        indexofN = new ArrayList<>();
         for (int i=0; i<n; i++) {
             if(!indexofB.contains(i)) indexofN.add(i);
         }
@@ -61,7 +61,7 @@ public class Simplex {
         );
     }
 
-    private void removeRedundant(Vector<Integer> indexofRedundant) {
+    private void removeRedundant(ArrayList<Integer> indexofRedundant) {
         SimpleMatrix AReducted = null, bReducted=null;
         for (int i=0; i<A.numRows(); i++) {
             if (!indexofRedundant.contains(i)) {
