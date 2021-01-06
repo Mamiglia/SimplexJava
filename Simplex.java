@@ -1,6 +1,6 @@
-import java.lang.*;
+import java.lang.Double;
+import java.lang.Integer;
 import java.util.ArrayList;
-import java.util.Vector;
 
 import org.ejml.simple.SimpleMatrix; // must use v0.33 since recent versions don't have any documentation (or I couldn't find it)
 
@@ -104,7 +104,7 @@ public class Simplex {
                 int k; //index of B to be exited from B'
                 SimpleMatrix BinvertedNcolumnh = base.invert().mult(nonBase).extractVector(false, h);
                 SimpleMatrix Binvertedb = base.invert().mult(constraintsVector);
-                Vector<Double> roArray = new Vector<>();
+                ArrayList<Double> roArray = new ArrayList<>();
 
                 //populate roArray
                 for (int i=0; i<BinvertedNcolumnh.numRows(); i++) {
@@ -229,14 +229,14 @@ public class Simplex {
     }
 
     public static int indexOfMinimum(SimpleMatrix v) {
-        Vector<Double> c = new Vector<>();
+        ArrayList<Double> c = new ArrayList<>();
         for (int i=0; i<v.numRows(); i++) {
             c.add(v.get(i,0));
         }
 
         return c.indexOf(findMinimum(c));
     }
-    public static double findMinimum(Vector<Double> v) {
+    public static double findMinimum(ArrayList<Double> v) {
         double min = Double.POSITIVE_INFINITY;
         for (Double aDouble : v) {
             min = Double.min(aDouble, min);
