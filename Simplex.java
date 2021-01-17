@@ -1,6 +1,8 @@
 import java.lang.Double;
 import java.lang.Integer;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.ejml.simple.SimpleMatrix; // must use v0.33 since recent versions don't have any documentation (or I couldn't find it)
 
@@ -17,8 +19,8 @@ public class Simplex {
     protected final SimpleMatrix objectiveFunction; // c
     protected SimpleMatrix constraintsMatrix; // A
     protected SimpleMatrix constraintsVector; // b
-    protected ArrayList<Integer> indexofB; // indexes of variables in the current base.
-    protected ArrayList<Integer> indexofN; // indexes of variables left out from base.
+    protected ArrayList<Integer> indexInB; // indexes of variables in the current base.
+    protected ArrayList<Integer> indexInN; // indexes of variables left out from base.
     private SimpleMatrix cB; // vector of objective function with only the indexes of B.
     private SimpleMatrix cN; // vector of objective function with only the indexes not in B.
     protected SimpleMatrix base; // matrix with columns indexofB.
@@ -46,8 +48,19 @@ public class Simplex {
         );
     }
 
+    public Simplex(double[] objectiveFunction, double[][] constraintsMatrix, double[] constraintsVector, Integer[] indexInB, Integer[] indexInN) {
+        this(
+                convertArrayToSimpleMatrix(objectiveFunction, false),
+                new SimpleMatrix(constraintsMatrix),
+                convertArrayToSimpleMatrix(constraintsVector, false)
+        );
+        this.indexInB = new ArrayList<>(Arrays.asList(indexInB));
+        this.indexInN = new ArrayList<>(Arrays.asList(indexInN));
+    }
+
 
     protected void initialize() {
+        if (indexInB != null) return;
         System.out.println("Beginning Auxiliar problem");
         AuxSimplex aux = new AuxSimplex(constraintsMatrix, constraintsVector);
         aux.solve();
@@ -56,17 +69,17 @@ public class Simplex {
             optimalSolution = NONEXISTENT_SOLUTION;
             return;
         }
-        indexofB = aux.getIndexBase();
-        indexofN = new ArrayList<>();
+        indexInB = aux.getIndexBase();
+        indexInN = new ArrayList<>();
         for (int i = 0; i<numOfVars(); i++) {
-            if(!indexofB.contains(i)) indexofN.add(i);
+            if(!indexInB.contains(i)) indexInN.add(i);
         }
 
         removeRedundant(aux.getIndexofRedundant());
 
         System.out.println(
                 "Auxiliar problem solved, the Optimal solution exist\n"
-                + "Base Found: " + indexofB.toString()
+                + "Base Found: " + indexInB.toString()
         );
     }
 
@@ -129,9 +142,9 @@ public class Simplex {
 
                 System.out.println("h=" + h + " k=" + k);
 
-                int temp = indexofB.get(k);
-                indexofB.set(k, indexofN.get(h));
-                indexofN.set(h, temp);
+                int temp = indexInB.get(k);
+                indexInB.set(k, indexInN.get(h));
+                indexInN.set(h, temp);
 
                 j++;
             }
@@ -163,15 +176,15 @@ public class Simplex {
 
     private SimpleMatrix generateSBA() {
         SimpleMatrix xB = base.invert().mult(constraintsVector);
-        SimpleMatrix xN = new SimpleMatrix(indexofN.size(), 1);
+        SimpleMatrix xN = new SimpleMatrix(indexInN.size(), 1);
         SimpleMatrix xUnordered = xB.concatRows(xN);
         SimpleMatrix xStar = new SimpleMatrix(xUnordered.numRows(), 1);
 
-        for (int i = 0; i<indexofB.size(); i++) {
-            xStar.set(indexofB.get(i),0,xUnordered.get(i,0));
+        for (int i = 0; i< indexInB.size(); i++) {
+            xStar.set(indexInB.get(i),0,xUnordered.get(i,0));
         }
-        for (int i = 0; i<indexofN.size(); i++) {
-            xStar.set(indexofN.get(i),0,xUnordered.get(i+indexofB.size(),0));
+        for (int i = 0; i< indexInN.size(); i++) {
+            xStar.set(indexInN.get(i),0,xUnordered.get(i+ indexInB.size(),0));
         }
         return xStar;
     }
@@ -182,6 +195,7 @@ public class Simplex {
     }
 
     private void generateGamma() {
+        base.invert().mult(nonBase).print();
         gamma = (cN.transpose().minus(cB.transpose().mult(base.invert().mult(nonBase)))).transpose();
     }
 
@@ -190,15 +204,15 @@ public class Simplex {
         nonBase = null;
         cB = new SimpleMatrix(numOfConstraints(), 1);
         cN = new SimpleMatrix(numOfVars()-numOfConstraints(),1);
-        for (int i = 0; i<indexofB.size();i++) {
-            if (base == null) base = constraintsMatrix.extractVector(false,indexofB.get(i));
-            else base = base.concatColumns(constraintsMatrix.extractVector(false,indexofB.get(i)));
-            cB.set(i,0,objectiveFunction.get(indexofB.get(i),0));
+        for (int i = 0; i< indexInB.size(); i++) {
+            if (base == null) base = constraintsMatrix.extractVector(false, indexInB.get(i));
+            else base = base.concatColumns(constraintsMatrix.extractVector(false, indexInB.get(i)));
+            cB.set(i,0,objectiveFunction.get(indexInB.get(i),0));
         }
-        for (int j = 0; j<indexofN.size();j++) {
-            if (nonBase == null) nonBase = constraintsMatrix.extractVector(false,indexofN.get(j));
-            else nonBase = nonBase.concatColumns(constraintsMatrix.extractVector(false,indexofN.get(j)));
-            cN.set(j,0,objectiveFunction.get(indexofN.get(j),0));
+        for (int j = 0; j< indexInN.size(); j++) {
+            if (nonBase == null) nonBase = constraintsMatrix.extractVector(false, indexInN.get(j));
+            else nonBase = nonBase.concatColumns(constraintsMatrix.extractVector(false, indexInN.get(j)));
+            cN.set(j,0,objectiveFunction.get(indexInN.get(j),0));
         }
     }
     protected void printStatus() {
@@ -208,9 +222,9 @@ public class Simplex {
                 + "Current Gamma:\n"
                 + gamma.toString()
                 + "Indexes in Base: "
-                + indexofB.toString()
+                + indexInB.toString()
                 + "\nIndexes not in Base: "
-                + indexofN.toString()
+                + indexInN.toString()
         );
     }
     private boolean optimalityCriterion() {

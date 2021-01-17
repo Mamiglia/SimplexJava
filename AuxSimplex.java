@@ -28,44 +28,44 @@ class AuxSimplex extends Simplex {
 
     public ArrayList<Integer> getIndexBase() {
         System.out.println(indexofAux.toString());
-        int columnToBeExited = findAuxCol(indexofB);
+        int columnToBeExited = findAuxCol(indexInB);
         while (columnToBeExited>=0) {
             System.out.println("Column to be exited: " + columnToBeExited);
 
             int i = 0;
-            int columnToBeEntered = indexofN.get(i);
+            int columnToBeEntered = indexInN.get(i);
             while (indexofAux.contains(columnToBeEntered)) {
-                columnToBeEntered = indexofN.get(i++);
+                columnToBeEntered = indexInN.get(i++);
 
             }
             System.out.println("column to enter (K) : " + columnToBeEntered);
 
-            indexofB.set(indexofB.indexOf(columnToBeExited), columnToBeEntered);
-            indexofN.set(indexofN.indexOf(columnToBeEntered), columnToBeExited);
+            indexInB.set(indexInB.indexOf(columnToBeExited), columnToBeEntered);
+            indexInN.set(indexInN.indexOf(columnToBeEntered), columnToBeExited);
             generateBase();
             if (base.determinant() == 0) {
                 System.out.println("Redundant row found: "+ columnToBeEntered);
                 indexofRedundant.add(columnToBeEntered);
-                indexofB.remove(columnToBeEntered);
+                indexInB.remove(columnToBeEntered);
                 base.reshape(numOfConstraints()-1,numOfConstraints()-1);
                 nonBase.reshape(numOfConstraints()-1, nonBase.numCols());
             }
 
-            columnToBeExited = findAuxCol(indexofB);
+            columnToBeExited = findAuxCol(indexInB);
         }
-        return (ArrayList<Integer>)  indexofB.clone();
+        return (ArrayList<Integer>)  indexInB.clone();
     }
 
     @Override
     protected void initialize() {
-        indexofB = new ArrayList<>();
-        indexofN = new ArrayList<>();
+        indexInB = new ArrayList<>();
+        indexInN = new ArrayList<>();
         for (int i=0; i<numOfConstraints(); i++) {
-            indexofB.add(numOfVars()-numOfConstraints()+i);
+            indexInB.add(numOfVars()-numOfConstraints()+i);
         }
-        indexofAux = (ArrayList<Integer>) indexofB.clone();
+        indexofAux = (ArrayList<Integer>) indexInB.clone();
         for (int i=0; i<numOfVars()-numOfConstraints(); i++) {
-            indexofN.add(i);
+            indexInN.add(i);
         }
         updateParams();
 
