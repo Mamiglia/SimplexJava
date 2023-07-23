@@ -19,7 +19,7 @@ The main objectives of this project were as follows:
 3. Develop a working implementation of the simplex algorithm that can efficiently solve various linear programming problems.
 
 Example of linearly contstrained problem:
-$\max_{x,y} 30x + 40y. \\ subject\ to: \\ 2x + y \leq 10; \\ x + 2y \leq 12; \\ x + y \leq 7; \\ x,y \geq 0.$
+$$\max_{x,y} 30x + 40y. \\ subject\ to: \\ 2x + y \leq 10; \\ x + 2y \leq 12; \\ x + y \leq 7; \\ x,y \geq 0.$$
 
 ### Methodology
 The project followed these steps:
